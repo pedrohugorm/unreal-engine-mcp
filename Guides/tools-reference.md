@@ -1,6 +1,6 @@
 # 🔧 Advanced Tools Reference
 
-Complete documentation for all 21 tools in the Unreal MCP Advanced Server.
+Complete documentation for all tools in the Unreal MCP Advanced Server.
 
 ## 🏗️ World Building Tools
 
@@ -287,6 +287,96 @@ Modify actor position, rotation, and scale.
 - `location` (array): New world position (optional)
 - `rotation` (array): New rotation in degrees (optional)  
 - `scale` (array): New scale factors (optional)
+
+## 📦 Data Asset Tools
+
+### data_asset_read
+Read a Data Asset's class info, properties, and current values.
+
+**Parameters:**
+- `asset_path` (string): UE content path to the Data Asset (e.g. `/Game/Developers/pedro/DA_WS_NPC_TEST`)
+
+**Returns:** Class name, class path, asset name, and a `properties` object where each key is a property name mapped to:
+- `type` (string): Property type (e.g. `int32`, `FString`, `TArray<MyStruct>`)
+- `value`: Current value (JSON-serialized)
+- `meta` (object, optional): Metadata — `ClampMin`, `ClampMax`, `UIMin`, `UIMax`, `enum_values`, `tooltip`
+
+**Supported Property Types:**
+| UE Type | JSON Representation |
+|---|---|
+| `bool` | boolean |
+| `int32`, `int64`, `uint8`, `uint32`, `float`, `double` | number |
+| `FString`, `FName`, `FText` | string |
+| Enums (`FEnumProperty`, `TEnumAsByte`) | string (enum value name) |
+| `FVector` | `{"X": 0, "Y": 0, "Z": 0}` |
+| `FRotator` | `{"Pitch": 0, "Yaw": 0, "Roll": 0}` |
+| `FColor` | `{"R": 0, "G": 0, "B": 0, "A": 255}` |
+| `FLinearColor` | `{"R": 0, "G": 0, "B": 0, "A": 1.0}` |
+| `FTransform` | `{"Location": {...}, "Rotation": {...}, "Scale": {...}}` |
+| Custom `UScriptStruct` | object with field names as keys |
+| `TArray<T>` | array |
+| `TMap<K, V>` | array of `{"key": K, "value": V}` |
+| `TSet<T>` | array |
+| `UObject*`, `TSoftObjectPtr` | string (asset path) or null |
+
+**Example:**
+```bash
+data_asset_read(asset_path="/Game/Developers/pedro/DA_WS_NPC_TEST")
+```
+
+### data_asset_write
+Edit one or more properties on a Data Asset with validation.
+
+**Parameters:**
+- `asset_path` (string): UE content path to the Data Asset
+- `properties` (string): JSON string of property name → new value pairs
+- `save` (bool): Whether to save to disk after editing (default: `true`)
+
+**Validation:**
+All values are validated before any changes are applied (atomic operation):
+- **Type checking**: JSON value type must match the property type
+- **Numeric ranges**: Values are checked against `ClampMin`/`ClampMax` metadata
+- **Enum values**: String values are checked against valid enum entries
+- **Recursive**: Struct fields, array elements, map entries are all validated
+- If any property fails validation, no changes are applied
+
+**Example:**
+```bash
+# Edit a single property
+data_asset_write(
+  asset_path="/Game/Developers/pedro/DA_WS_NPC_TEST",
+  properties='{"Entries": [{"NodeType": "elite_cruiser", ...}]}'
+)
+```
+
+### data_asset_create
+Create a new Data Asset from a class or by duplicating an existing one.
+
+**Parameters:**
+- `asset_name` (string): Name for the new asset (e.g. `DA_WS_NPC_New`)
+- `package_path` (string): UE package path (e.g. `/Game/Developers/pedro`)
+- `class_path` (string, optional): UClass path for creating from scratch (e.g. `/Script/SpaceGame.WorldStateNodeDefinition`)
+- `duplicate_from` (string, optional): Asset path to duplicate from
+- `properties` (string, optional): JSON string of property overrides to apply after creation
+
+Either `class_path` or `duplicate_from` must be provided. If both are given, `duplicate_from` takes precedence.
+
+**Examples:**
+```bash
+# Create from class
+data_asset_create(
+  asset_name="DA_WS_NPC_New",
+  package_path="/Game/Developers/pedro",
+  class_path="/Script/SpaceGame.WorldStateNodeDefinition"
+)
+
+# Duplicate existing
+data_asset_create(
+  asset_name="DA_WS_NPC_Copy",
+  package_path="/Game/Developers/pedro",
+  duplicate_from="/Game/Developers/pedro/DA_WS_NPC_TEST"
+)
+```
 
 ---
 
