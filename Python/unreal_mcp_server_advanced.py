@@ -54,6 +54,7 @@ from helpers.blueprint_graph import node_deleter
 from helpers.blueprint_graph import node_properties
 from helpers.blueprint_graph import function_manager
 from helpers.blueprint_graph import function_io
+from helpers import data_asset_manager
 
 
 # Configure logging with more detailed format
@@ -2785,9 +2786,132 @@ def rename_function(
         return {"success": False, "message": str(e)}
 
 
-# Run the server
+# ============================================================================
+# Data Asset Tools
+# ============================================================================
 
 
+@mcp.tool()
+def data_asset_read(asset_path: str) -> Dict[str, Any]:
+    """
+    Read a Data Asset's class info, properties, and current values.
+
+    Returns the asset's class name, all property names with types, values,
+    and metadata (ClampMin/Max, enum values, tooltips).
+
+    Args:
+        asset_path: UE content path (e.g. "/Game/Developers/pedro/DA_WS_NPC_TEST")
+
+    Returns:
+        Dictionary with class_name, class_path, asset_name, and properties dict
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        result = data_asset_manager.read_data_asset(unreal, asset_path)
+        return result
+    except Exception as e:
+        logger.error(f"data_asset_read error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def data_asset_write(
+    asset_path: str,
+    properties: str,
+    save: bool = True
+) -> Dict[str, Any]:
+    """
+    Edit one or more properties on a Data Asset.
+
+    Validates all values against type constraints and metadata (ClampMin/Max,
+    enum values) before applying any changes. The operation is atomic: if any
+    property fails validation, no changes are applied.
+
+    Args:
+        asset_path: UE content path (e.g. "/Game/Developers/pedro/DA_WS_NPC_TEST")
+        properties: JSON string of property_name -> new_value pairs
+                    (e.g. '{"Health": 150.0, "NPCName": "Modified NPC"}')
+        save: Whether to save the asset to disk after editing (default True)
+
+    Returns:
+        Dictionary with modified_properties list and asset_saved status
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        # Parse properties from JSON string
+        if isinstance(properties, str):
+            props_dict = json.loads(properties)
+        else:
+            props_dict = properties
+
+        result = data_asset_manager.write_data_asset(unreal, asset_path, props_dict, save)
+        return result
+    except json.JSONDecodeError as e:
+        return {"success": False, "message": f"Invalid JSON in properties: {e}"}
+    except Exception as e:
+        logger.error(f"data_asset_write error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def data_asset_create(
+    asset_name: str,
+    package_path: str,
+    class_path: str = "",
+    duplicate_from: str = "",
+    properties: str = ""
+) -> Dict[str, Any]:
+    """
+    Create a new Data Asset from a class or by duplicating an existing one.
+
+    Provide either class_path (create empty) or duplicate_from (copy existing).
+    Optionally set property values on the newly created asset.
+
+    Args:
+        asset_name: Name for the new asset (e.g. "DA_WS_NPC_New")
+        package_path: UE package path (e.g. "/Game/Developers/pedro")
+        class_path: UClass path for creating from scratch
+                    (e.g. "/Script/SpaceGame.WorldSystemNPCData")
+        duplicate_from: Asset path to duplicate from
+                       (e.g. "/Game/Developers/pedro/DA_WS_NPC_TEST")
+        properties: Optional JSON string of property overrides to apply after creation
+
+    Returns:
+        Dictionary with asset_name, asset_path, class_name, created_from, and asset_saved
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        # Parse optional properties
+        props_dict = None
+        if properties:
+            if isinstance(properties, str):
+                props_dict = json.loads(properties)
+            else:
+                props_dict = properties
+
+        result = data_asset_manager.create_data_asset(
+            unreal,
+            asset_name,
+            package_path,
+            class_path=class_path or None,
+            duplicate_from=duplicate_from or None,
+            properties=props_dict,
+        )
+        return result
+    except json.JSONDecodeError as e:
+        return {"success": False, "message": f"Invalid JSON in properties: {e}"}
+    except Exception as e:
+        logger.error(f"data_asset_create error: {e}")
+        return {"success": False, "message": str(e)}
 
 
 # Run the server

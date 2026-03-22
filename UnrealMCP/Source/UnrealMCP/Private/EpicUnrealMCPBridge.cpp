@@ -54,6 +54,7 @@
 #include "Commands/EpicUnrealMCPEditorCommands.h"
 #include "Commands/EpicUnrealMCPBlueprintCommands.h"
 #include "Commands/EpicUnrealMCPBlueprintGraphCommands.h"
+#include "Commands/EpicUnrealMCPDataAssetCommands.h"
 #include "Commands/EpicUnrealMCPCommonUtils.h"
 
 // Default settings
@@ -65,6 +66,7 @@ UEpicUnrealMCPBridge::UEpicUnrealMCPBridge()
     EditorCommands = MakeShared<FEpicUnrealMCPEditorCommands>();
     BlueprintCommands = MakeShared<FEpicUnrealMCPBlueprintCommands>();
     BlueprintGraphCommands = MakeShared<FEpicUnrealMCPBlueprintGraphCommands>();
+    DataAssetCommands = MakeShared<FEpicUnrealMCPDataAssetCommands>();
 }
 
 UEpicUnrealMCPBridge::~UEpicUnrealMCPBridge()
@@ -72,6 +74,7 @@ UEpicUnrealMCPBridge::~UEpicUnrealMCPBridge()
     EditorCommands.Reset();
     BlueprintCommands.Reset();
     BlueprintGraphCommands.Reset();
+    DataAssetCommands.Reset();
 }
 
 // Initialize subsystem
@@ -261,6 +264,13 @@ FString UEpicUnrealMCPBridge::ExecuteCommand(const FString& CommandType, const T
                      CommandType == TEXT("rename_function"))
             {
                 ResultJson = BlueprintGraphCommands->HandleCommand(CommandType, Params);
+            }
+            // Data Asset Commands
+            else if (CommandType == TEXT("read_data_asset") ||
+                     CommandType == TEXT("write_data_asset") ||
+                     CommandType == TEXT("create_data_asset"))
+            {
+                ResultJson = DataAssetCommands->HandleCommand(CommandType, Params);
             }
             else
             {
