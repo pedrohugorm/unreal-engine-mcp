@@ -236,13 +236,15 @@ TSharedPtr<FJsonValue> FEpicUnrealMCPDataAssetCommands::SerializeValueDirect(FPr
 	if (FObjectProperty* P = CastField<FObjectProperty>(Property))
 	{
 		UObject* O = P->GetPropertyValue(ValuePtr);
-		return O ? MakeShared<FJsonValueString>(O->GetPathName()) : MakeShared<FJsonValueNull>();
+		if (O) return MakeShared<FJsonValueString>(O->GetPathName());
+		return TSharedPtr<FJsonValue>(MakeShared<FJsonValueNull>());
 	}
 	if (FSoftObjectProperty* P = CastField<FSoftObjectProperty>(Property))
 	{
 		const FSoftObjectPtr& S = *static_cast<const FSoftObjectPtr*>(ValuePtr);
 		FSoftObjectPath Path = S.ToSoftObjectPath();
-		return Path.IsValid() ? MakeShared<FJsonValueString>(Path.ToString()) : MakeShared<FJsonValueNull>();
+		if (Path.IsValid()) return MakeShared<FJsonValueString>(Path.ToString());
+		return TSharedPtr<FJsonValue>(MakeShared<FJsonValueNull>());
 	}
 
 	// Fallback
@@ -437,13 +439,21 @@ bool FEpicUnrealMCPDataAssetCommands::ValidatePropertyValue(FProperty* Property,
 		return true;
 	}
 
-	// Struct — recursive
+	// Struct — recursive (skip known shortcuts that use custom JSON keys)
 	if (FStructProperty* SP = CastField<FStructProperty>(Property))
 	{
 		if (JsonValue->Type != EJson::Object)
 		{
 			OutError = FString::Printf(TEXT("Property '%s' expects an object (struct %s)"), *Property->GetName(), *SP->Struct->GetName());
 			return false;
+		}
+		// Known struct shortcuts use custom JSON keys (X/Y/Z, R/G/B/A, Pitch/Yaw/Roll, Location/Rotation/Scale)
+		// that don't match UE internal property names — skip recursive field validation for these
+		FName SN = SP->Struct->GetFName();
+		if (SN == NAME_Vector || SN == NAME_Rotator || SN == NAME_Color || SN == NAME_LinearColor ||
+		    SN == NAME_Vector2D || SN == NAME_Transform)
+		{
+			return true;
 		}
 		const TSharedPtr<FJsonObject>& JO = JsonValue->AsObject();
 		for (const auto& F : JO->Values)
