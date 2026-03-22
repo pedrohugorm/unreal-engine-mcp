@@ -294,7 +294,7 @@ Modify actor position, rotation, and scale.
 Read a Data Asset's class info, properties, and current values.
 
 **Parameters:**
-- `asset_path` (string): UE content path to the Data Asset (e.g. `/Game/Developers/pedro/DA_WS_NPC_TEST`)
+- `asset_path` (string): UE content path to the Data Asset (e.g. `/Game/MyProject/DA_WS_NPC_TEST`)
 
 **Returns:** Class name, class path, asset name, and a `properties` object where each key is a property name mapped to:
 - `type` (string): Property type (e.g. `int32`, `FString`, `TArray<MyStruct>`)
@@ -321,7 +321,7 @@ Read a Data Asset's class info, properties, and current values.
 
 **Example:**
 ```bash
-data_asset_read(asset_path="/Game/Developers/pedro/DA_WS_NPC_TEST")
+data_asset_read(asset_path="/Game/MyProject/DA_WS_NPC_TEST")
 ```
 
 ### data_asset_write
@@ -344,7 +344,7 @@ All values are validated before any changes are applied (atomic operation):
 ```bash
 # Edit a single property
 data_asset_write(
-  asset_path="/Game/Developers/pedro/DA_WS_NPC_TEST",
+  asset_path="/Game/MyProject/DA_WS_NPC_TEST",
   properties='{"Entries": [{"NodeType": "elite_cruiser", ...}]}'
 )
 ```
@@ -354,8 +354,8 @@ Create a new Data Asset from a class or by duplicating an existing one.
 
 **Parameters:**
 - `asset_name` (string): Name for the new asset (e.g. `DA_WS_NPC_New`)
-- `package_path` (string): UE package path (e.g. `/Game/Developers/pedro`)
-- `class_path` (string, optional): UClass path for creating from scratch (e.g. `/Script/SpaceGame.WorldStateNodeDefinition`)
+- `package_path` (string): UE package path (e.g. `/Game/MyProject`)
+- `class_path` (string, optional): UClass path for creating from scratch (e.g. `/Script/MyProject.MyDataAssetClass`)
 - `duplicate_from` (string, optional): Asset path to duplicate from
 - `properties` (string, optional): JSON string of property overrides to apply after creation
 
@@ -366,15 +366,15 @@ Either `class_path` or `duplicate_from` must be provided. If both are given, `du
 # Create from class
 data_asset_create(
   asset_name="DA_WS_NPC_New",
-  package_path="/Game/Developers/pedro",
-  class_path="/Script/SpaceGame.WorldStateNodeDefinition"
+  package_path="/Game/MyProject",
+  class_path="/Script/MyProject.MyDataAssetClass"
 )
 
 # Duplicate existing
 data_asset_create(
   asset_name="DA_WS_NPC_Copy",
-  package_path="/Game/Developers/pedro",
-  duplicate_from="/Game/Developers/pedro/DA_WS_NPC_TEST"
+  package_path="/Game/MyProject",
+  duplicate_from="/Game/MyProject/DA_WS_NPC_TEST"
 )
 ```
 

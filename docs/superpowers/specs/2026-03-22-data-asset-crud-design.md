@@ -79,7 +79,7 @@ private:
 {
     "type": "read_data_asset",
     "params": {
-        "asset_path": "/Game/Developers/pedro/DA_WS_NPC_TEST"
+        "asset_path": "/Game/MyProject/DA_WS_NPC_TEST"
     }
 }
 ```
@@ -89,7 +89,7 @@ private:
 {
     "success": true,
     "class_name": "UWorldSystemNPCData",
-    "class_path": "/Script/SpaceGame.WorldSystemNPCData",
+    "class_path": "/Script/MyProject.WorldSystemNPCData",
     "asset_name": "DA_WS_NPC_TEST",
     "properties": {
         "NPCName": {"type": "FString", "value": "Test NPC"},
@@ -114,7 +114,7 @@ private:
 {
     "type": "write_data_asset",
     "params": {
-        "asset_path": "/Game/Developers/pedro/DA_WS_NPC_TEST",
+        "asset_path": "/Game/MyProject/DA_WS_NPC_TEST",
         "properties": {
             "Health": 150.0,
             "NPCName": "Modified NPC"
@@ -158,8 +158,8 @@ private:
     "type": "create_data_asset",
     "params": {
         "asset_name": "DA_WS_NPC_New",
-        "package_path": "/Game/Developers/pedro",
-        "class_path": "/Script/SpaceGame.WorldSystemNPCData",
+        "package_path": "/Game/MyProject",
+        "class_path": "/Script/MyProject.WorldSystemNPCData",
         "properties": {"NPCName": "New NPC"}
     }
 }
@@ -171,8 +171,8 @@ private:
     "type": "create_data_asset",
     "params": {
         "asset_name": "DA_WS_NPC_Copy",
-        "package_path": "/Game/Developers/pedro",
-        "duplicate_from": "/Game/Developers/pedro/DA_WS_NPC_TEST",
+        "package_path": "/Game/MyProject",
+        "duplicate_from": "/Game/MyProject/DA_WS_NPC_TEST",
         "properties": {"NPCName": "Copied NPC"}
     }
 }
@@ -250,7 +250,7 @@ def data_asset_read(asset_path: str) -> str:
     """Read a Data Asset's class info, properties, and values.
 
     Args:
-        asset_path: UE content path (e.g. "/Game/Developers/pedro/DA_WS_NPC_TEST")
+        asset_path: UE content path (e.g. "/Game/MyProject/DA_WS_NPC_TEST")
     """
 ```
 
@@ -285,8 +285,8 @@ def data_asset_create(
 
     Args:
         asset_name: Name for the new asset
-        package_path: UE package path (e.g. "/Game/Developers/pedro")
-        class_path: UClass path for new asset (e.g. "/Script/SpaceGame.MyDataAsset")
+        package_path: UE package path (e.g. "/Game/MyProject")
+        class_path: UClass path for new asset (e.g. "/Script/MyProject.MyDataAsset")
         duplicate_from: Asset path to duplicate from (alternative to class_path)
         properties: Optional property overrides to apply after creation
     """
@@ -294,7 +294,7 @@ def data_asset_create(
 
 ## Test Plan
 
-1. **Read test**: Call `data_asset_read` on `/Game/Developers/pedro/DA_WS_NPC_TEST` — verify class name, property list, and values are returned
+1. **Read test**: Call `data_asset_read` on `/Game/MyProject/DA_WS_NPC_TEST` — verify class name, property list, and values are returned
 2. **Write test**: Edit a property on `DA_WS_NPC_TEST`, read it back, verify the value changed
 3. **Validation test**: Attempt an invalid edit (wrong type, out of range) — verify rejection with clear error
 4. **Create from duplicate**: Duplicate `DA_WS_NPC_TEST` → `DA_WS_NPC_TEST_COPY`, verify identical properties
