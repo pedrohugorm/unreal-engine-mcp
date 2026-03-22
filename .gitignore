@@ -27,6 +27,7 @@ FlopperamUnrealMCP/Content/Developers/
 FlopperamUnrealMCP/Content/Collections/
 
 # Unreal Engine generated files (plugin level)
+UnrealMCP/Binaries/
 FlopperamUnrealMCP/Plugins/UnrealMCP/Binaries/
 FlopperamUnrealMCP/Plugins/UnrealMCP/Intermediate/
 FlopperamUnrealMCP/FlopperamUnrealMCP.sln
