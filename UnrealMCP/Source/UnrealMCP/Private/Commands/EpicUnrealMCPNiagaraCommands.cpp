@@ -81,7 +81,7 @@ TSharedPtr<FNiagaraSystemViewModel> FEpicUnrealMCPNiagaraCommands::CreateSystemV
 	FNiagaraSystemViewModelOptions Options;
 	Options.bCanAutoCompile = false;
 	Options.bCanSimulate = false;
-	Options.bIsForDataProcessingOnly = true;
+	Options.bIsForDataProcessingOnly = false;
 	Options.EditMode = ENiagaraSystemViewModelEditMode::SystemAsset;
 	Options.MessageLogGuid = FGuid::NewGuid();
 
@@ -539,8 +539,11 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPNiagaraCommands::HandleWriteNiagaraModuleI
 		}
 	}
 
-	// Compile and save
-	System->RequestCompile(false);
+	// Mark dirty, compile synchronously, then save
+	System->MarkPackageDirty();
+	System->RequestCompile(true); // true = force / synchronous
+	System->WaitForCompilationComplete();
+
 	bool bSaved = false;
 	if (bSave)
 	{
