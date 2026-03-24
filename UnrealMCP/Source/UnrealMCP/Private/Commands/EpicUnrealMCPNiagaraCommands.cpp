@@ -83,6 +83,7 @@ TSharedPtr<FNiagaraSystemViewModel> FEpicUnrealMCPNiagaraCommands::CreateSystemV
 	Options.bCanSimulate = false;
 	Options.bIsForDataProcessingOnly = true;
 	Options.EditMode = ENiagaraSystemViewModelEditMode::SystemAsset;
+	Options.MessageLogGuid = FGuid::NewGuid();
 
 	ViewModel->Initialize(*System, Options);
 	return ViewModel;
