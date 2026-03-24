@@ -55,6 +55,7 @@
 #include "Commands/EpicUnrealMCPBlueprintCommands.h"
 #include "Commands/EpicUnrealMCPBlueprintGraphCommands.h"
 #include "Commands/EpicUnrealMCPDataAssetCommands.h"
+#include "Commands/EpicUnrealMCPNiagaraCommands.h"
 #include "Commands/EpicUnrealMCPCommonUtils.h"
 
 // Default settings
@@ -67,6 +68,7 @@ UEpicUnrealMCPBridge::UEpicUnrealMCPBridge()
     BlueprintCommands = MakeShared<FEpicUnrealMCPBlueprintCommands>();
     BlueprintGraphCommands = MakeShared<FEpicUnrealMCPBlueprintGraphCommands>();
     DataAssetCommands = MakeShared<FEpicUnrealMCPDataAssetCommands>();
+    NiagaraCommands = MakeShared<FEpicUnrealMCPNiagaraCommands>();
 }
 
 UEpicUnrealMCPBridge::~UEpicUnrealMCPBridge()
@@ -75,6 +77,7 @@ UEpicUnrealMCPBridge::~UEpicUnrealMCPBridge()
     BlueprintCommands.Reset();
     BlueprintGraphCommands.Reset();
     DataAssetCommands.Reset();
+    NiagaraCommands.Reset();
 }
 
 // Initialize subsystem
@@ -264,6 +267,15 @@ FString UEpicUnrealMCPBridge::ExecuteCommand(const FString& CommandType, const T
                      CommandType == TEXT("rename_function"))
             {
                 ResultJson = BlueprintGraphCommands->HandleCommand(CommandType, Params);
+            }
+            // Niagara Commands
+            else if (CommandType == TEXT("read_niagara_system") ||
+                     CommandType == TEXT("write_niagara_module_input") ||
+                     CommandType == TEXT("add_niagara_module") ||
+                     CommandType == TEXT("remove_niagara_module") ||
+                     CommandType == TEXT("list_niagara_modules"))
+            {
+                ResultJson = NiagaraCommands->HandleCommand(CommandType, Params);
             }
             // Data Asset Commands
             else if (CommandType == TEXT("read_data_asset") ||

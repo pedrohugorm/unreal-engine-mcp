@@ -55,6 +55,7 @@ from helpers.blueprint_graph import node_properties
 from helpers.blueprint_graph import function_manager
 from helpers.blueprint_graph import function_io
 from helpers import data_asset_manager
+from helpers import niagara_manager
 
 
 # Configure logging with more detailed format
@@ -2914,7 +2915,163 @@ def data_asset_create(
         return {"success": False, "message": str(e)}
 
 
+# ============================================================================
+# Niagara Tools
+# ============================================================================
+
+
+@mcp.tool()
+def niagara_read(asset_path: str) -> Dict[str, Any]:
+    """
+    Read a Niagara System's full structure: emitters, module groups, modules, and input values.
+
+    Returns the system name, all emitters with their enabled state, each emitter's
+    module groups (Emitter Update, Particle Spawn, Particle Update, etc.), the modules
+    in each group with their inputs (name, type, value mode, and current value).
+
+    Args:
+        asset_path: UE content path to the Niagara System (e.g. "/Game/Effects/NS_Explosion")
+
+    Returns:
+        Dictionary with system_name, emitters array, and user_parameters
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        return niagara_manager.read_niagara_system(unreal, asset_path)
+    except Exception as e:
+        logger.error(f"niagara_read error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def niagara_write(
+    asset_path: str,
+    emitter: str,
+    module: str,
+    inputs: str,
+    save: bool = True
+) -> Dict[str, Any]:
+    """
+    Set module input values on a Niagara System emitter.
+
+    Modifies local values on module inputs. Supports float, int, bool, FVector,
+    FVector2D, FLinearColor, and FQuat types.
+
+    Args:
+        asset_path: UE content path to the Niagara System
+        emitter: Name of the emitter to modify
+        module: Name of the module containing the inputs
+        inputs: JSON string of input_name -> new_value pairs
+                (e.g. '{"Lifetime": 5.0, "Color": {"R":1,"G":0,"B":0,"A":1}}')
+        save: Whether to save after editing (default True)
+
+    Returns:
+        Dictionary with modified_inputs list and asset_saved status
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        if isinstance(inputs, str):
+            inputs_dict = json.loads(inputs)
+        else:
+            inputs_dict = inputs
+
+        return niagara_manager.write_niagara_module_input(unreal, asset_path, emitter, module, inputs_dict, save)
+    except json.JSONDecodeError as e:
+        return {"success": False, "message": f"Invalid JSON in inputs: {e}"}
+    except Exception as e:
+        logger.error(f"niagara_write error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def niagara_add_module(
+    asset_path: str,
+    emitter: str,
+    group: str,
+    module_path: str
+) -> Dict[str, Any]:
+    """
+    Add a module to a Niagara emitter's group.
+
+    Use niagara_list_modules to discover available modules and their paths.
+
+    Args:
+        asset_path: UE content path to the Niagara System
+        emitter: Name of the emitter
+        group: Name of the module group (e.g. "Particle Spawn", "Particle Update")
+        module_path: Asset path or name of the module to add
+
+    Returns:
+        Dictionary with added_module name and asset_saved status
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        return niagara_manager.add_niagara_module(unreal, asset_path, emitter, group, module_path)
+    except Exception as e:
+        logger.error(f"niagara_add_module error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def niagara_remove_module(
+    asset_path: str,
+    emitter: str,
+    module: str
+) -> Dict[str, Any]:
+    """
+    Remove a module from a Niagara emitter.
+
+    Args:
+        asset_path: UE content path to the Niagara System
+        emitter: Name of the emitter
+        module: Name of the module to remove
+
+    Returns:
+        Dictionary with removed_module name and asset_saved status
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        return niagara_manager.remove_niagara_module(unreal, asset_path, emitter, module)
+    except Exception as e:
+        logger.error(f"niagara_remove_module error: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@mcp.tool()
+def niagara_list_modules(filter: str = "") -> Dict[str, Any]:
+    """
+    List available Niagara module assets that can be added to emitters.
+
+    Args:
+        filter: Optional keyword to filter modules by name (case-insensitive)
+
+    Returns:
+        Dictionary with count and modules array (name, path, description)
+    """
+    unreal = get_unreal_connection()
+    if not unreal:
+        return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+    try:
+        return niagara_manager.list_niagara_modules(unreal, filter)
+    except Exception as e:
+        logger.error(f"niagara_list_modules error: {e}")
+        return {"success": False, "message": str(e)}
+
+
 # Run the server
 if __name__ == "__main__":
     logger.info("Starting Advanced MCP server with stdio transport")
-    mcp.run(transport='stdio') 
+    mcp.run(transport='stdio')
