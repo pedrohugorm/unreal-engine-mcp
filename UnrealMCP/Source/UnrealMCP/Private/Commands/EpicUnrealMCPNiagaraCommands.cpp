@@ -424,7 +424,7 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPNiagaraCommands::HandleWriteNiagaraModuleI
 	TArray<FString> Modified;
 	for (const auto& Pair : (*InputsPtr)->Values)
 	{
-		const FString& InputName = Pair.Key;
+		const FString InputName(*Pair.Key);
 		const TSharedPtr<FJsonValue>& JsonVal = Pair.Value;
 
 		UNiagaraStackFunctionInput* TargetInput = nullptr;
